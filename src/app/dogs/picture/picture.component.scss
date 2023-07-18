@@ -1,0 +1,12 @@
+:host {
+    padding: 1rem;
+    ::ng-deep {
+        mat-card {
+            img {
+                width: 250px;
+                height: 250px;
+                object-fit: cover;
+            }
+        }
+    }
+}

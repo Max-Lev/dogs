@@ -1,45 +1,62 @@
-import { Component, OnInit } from '@angular/core';
-import { DogsService } from '../providers/dogs.service';
 import { HttpClient } from '@angular/common/http';
-import { IResponse } from '../models/api-response.model';
-import { Dog, DogModel } from '../models/dog.model';
-import { Observable, map, of } from 'rxjs';
+import { Component, ChangeDetectionStrategy, OnInit, AfterViewInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
+import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
+import { Observable, Subject, takeUntil } from 'rxjs';
+import { DogsService } from '../providers/dogs.service';
+import { SIZE_LIST } from '../models/config';
+
 
 @Component({
   selector: 'app-dogs-container',
   templateUrl: './dogs-container.component.html',
-  styleUrls: ['./dogs-container.component.scss']
+  styleUrls: ['./dogs-container.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DogsContainerComponent implements OnInit {
+export class DogsContainerComponent implements OnInit, AfterViewInit,OnDestroy {
 
-  dogs = [
-    {
-      name: 'German',
-      value: 1
-    }
-  ];
+  sizeList = SIZE_LIST;
 
-  amount = Array.from({ length: 50 }, (_, i) => i + 1)
+  dogs$!: Observable<string[]>;
 
-  dogs$!: Observable<Dog[]>;
+  images$!: Observable<string[]>;
 
-  constructor(private dogsService: DogsService, private http: HttpClient) {
+  dogsForm: FormGroup;
+
+  sub$:Subject<boolean> = new Subject();
+
+  constructor(private formBuilder: FormBuilder,
+    private changeDetector: ChangeDetectorRef,
+    private dogsService: DogsService, private http: HttpClient) {
+
+    this.dogsForm = this.formBuilder.group({
+      breed: new FormControl<string | null>(null, [Validators.required]),
+      size: new FormControl<number | null>(null)
+    });
 
   }
 
   ngOnInit(): void {
-    this.dogs$ = this.dogsService.displayDogs$();
-    console.log(this.dogs$)
-    // .pipe(
-    //   map((r) => r.dog)
-    // );
-    this.dogsService.displayDogs$().subscribe((response: { dog: Dog, images: string[] }) => {
-      console.log(response);
-    //   // response.message.
-    //   // new DogModel(response);
-    //   // const keys = Object.keys(response.message).length
-    //   // console.log(keys)
-    })
+    this.dogs$ = this.dogsService.getDogsList$();    
+  }
+
+  ngAfterViewInit(): void {
+    this.getImages$();
+  }
+
+  ngOnDestroy(): void {
+    this.sub$.next(false);
+    this.sub$.unsubscribe();
+  }
+
+
+  getImages$() {
+    this.dogsForm.valueChanges.pipe(takeUntil(this.sub$)).subscribe(val => {
+      const { breed, size } = val
+      if (breed !== null) {
+        this.images$ = this.dogsService.getBreed$(breed, size);
+      }
+    });
   }
 
 }
+

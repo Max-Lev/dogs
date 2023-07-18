@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, Subject, filter, from, map, mergeMap, of, tap, toArray } from 'rxjs';
+import { Observable, Subject, filter, from, map, mergeMap, of, take, tap, toArray } from 'rxjs';
 import { IResponse } from '../models/api-response.model';
 import { Dog, DogModel, IDog } from '../models/dog.model';
 
@@ -17,55 +17,55 @@ export class DogsService {
     return this.http.get<any>(`https://dog.ceo/api/breed/${breed}/images`);
   }
 
-  displayDogs$(): Observable<any> {
-
-    // const res: Subject<Dog> = new Subject();
-    const res: Dog[] = [];
-    // const list = [];
-    return this.getDogs$().pipe(
-      mergeMap((response) => {
-        return this.setModel(response);
-      }),
-      mergeMap((dog: Dog) => {
-        return this.getDogsImages$(dog.breedName).pipe(
-          // IResponse
-
-          map((response: { message: string[], status: string }) => {
-            // return of(res.push(new Dog(dog.breedName, response.message)))
-            res.push(new Dog(dog.breedName, response.message))
-            // return new Dog(dog.breedName, response.message)
-            return res;
+  getBreed$(breed: string, size: number): Observable<any> {
+    return this.getDogsImages$(breed)
+      .pipe(
+        map((response: { message: string[], status: string }, index: number) => {
+          if (size === null) {
+            return response.message;
+          } else {
+            const r = response.message.slice(0, size)
+            console.log(r, index)
+            console.log(response.message, index)
+            return r;
           }
-          ),
-          // toArray()
-          // map((response: { message: string[], status: string }) => ({
-          //   dog: dog,
-          //   images: response.message
-          // }))
-        )
 
-
-      }));
-    //   console.log(from([res]))
-    // return from([res]);
+        })
+      )
+      .pipe(
+        tap((data) => {
+          console.log(data);
+        })
+      )
   }
 
-  setModel(response: { message: string[], status: string }): Dog[] {
+  getDogsList$(): Observable<string[]> {
+    const res: any[] = [];
+    return this.getDogs$().pipe(
+      map((response) => this.getBreeds(response)),
+      // mergeMap((dog: Dog) => {
+      //   return this.getDogsImages$(dog.breedName).pipe(
+      //     // IResponse
+
+      //     map((response: { message: string[], status: string }) => {
+      //       // return of(res.push(new Dog(dog.breedName, response.message)))
+      //       res.push(new Dog(dog.breedName, response.message))
+      //       // return new Dog(dog.breedName, response.message)
+      //       return res;
+      //     }
+      //     ))
+
+
+      // })
+    );
+
+  }
+
+  getBreeds(response: { message: string[], status: string }): string[] {
 
     const keys: string[] = Object.keys(response.message);
+    return keys;
 
-    const vals: Dog[] = [];
-
-    keys.forEach((k: string) => {
-      const breeds = response.message[k as any];
-      if (breeds.length === 0) {
-        return vals.push(new Dog(k));
-      } else {
-        return false;
-      }
-    });
-
-    return vals;
   }
 
 }

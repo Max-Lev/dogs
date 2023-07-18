@@ -1,0 +1,1 @@
+export const SIZE_LIST = Array.from({ length: 50 }, (_, i) => i + 1)
