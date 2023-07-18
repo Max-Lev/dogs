@@ -10,6 +10,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { DogsService } from './providers/dogs.service';
 import { PictureComponent } from './picture/picture.component';
 
+
 @NgModule({
   declarations: [
     DogsContainerComponent,
@@ -25,7 +26,7 @@ import { PictureComponent } from './picture/picture.component';
     MatCardModule
   ],
   providers: [
-    DogsService
+    DogsService,
   ]
 })
 export class DogsModule { }

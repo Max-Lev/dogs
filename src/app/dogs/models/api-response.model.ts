@@ -1,4 +1,3 @@
-import { IDog } from './dog.model';
 
 export interface IResponse {
     message: {

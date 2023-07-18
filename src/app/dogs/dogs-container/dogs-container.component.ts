@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, ChangeDetectionStrategy, OnInit, AfterViewInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
-import { Observable, Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, map, of, takeUntil } from 'rxjs';
 import { DogsService } from '../providers/dogs.service';
 import { SIZE_LIST } from '../models/config';
+import { ActivatedRoute } from '@angular/router';
 
 
 @Component({
@@ -12,7 +13,7 @@ import { SIZE_LIST } from '../models/config';
   styleUrls: ['./dogs-container.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DogsContainerComponent implements OnInit, AfterViewInit,OnDestroy {
+export class DogsContainerComponent implements OnInit, AfterViewInit, OnDestroy {
 
   sizeList = SIZE_LIST;
 
@@ -22,10 +23,11 @@ export class DogsContainerComponent implements OnInit, AfterViewInit,OnDestroy {
 
   dogsForm: FormGroup;
 
-  sub$:Subject<boolean> = new Subject();
+  sub$: Subject<boolean> = new Subject();
 
   constructor(private formBuilder: FormBuilder,
     private changeDetector: ChangeDetectorRef,
+    private activatedRoute: ActivatedRoute,
     private dogsService: DogsService, private http: HttpClient) {
 
     this.dogsForm = this.formBuilder.group({
@@ -36,7 +38,7 @@ export class DogsContainerComponent implements OnInit, AfterViewInit,OnDestroy {
   }
 
   ngOnInit(): void {
-    this.dogs$ = this.dogsService.getDogsList$();    
+    this.dogs$ = of(this.activatedRoute.snapshot.data['dogsListResolver']);
   }
 
   ngAfterViewInit(): void {
@@ -51,9 +53,9 @@ export class DogsContainerComponent implements OnInit, AfterViewInit,OnDestroy {
 
   getImages$() {
     this.dogsForm.valueChanges.pipe(takeUntil(this.sub$)).subscribe(val => {
-      const { breed, size } = val
+      const { breed, size } = val;
       if (breed !== null) {
-        this.images$ = this.dogsService.getBreed$(breed, size);
+        this.images$ = this.dogsService.getDogsImages$(breed, size);
       }
     });
   }
