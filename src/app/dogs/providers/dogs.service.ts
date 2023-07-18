@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { Observable, debounceTime, distinctUntilChanged, map, of, switchMap } from 'rxjs';
 import { IResponse } from '../models/api-response.model';
 
 @Injectable()
@@ -26,16 +26,18 @@ export class DogsService {
   }
 
   getDogsImages$(breed: string, size: number): Observable<string[]> {
-    return this.getImagesAPI$(breed).pipe(
-      map((response: { message: string[], status: string }) => {
-        if (size === null) {
-          return response.message;
-        } else {
-          return response.message.slice(0, size);
-        }
 
-      })
-    );
+    return this.getImagesAPI$(breed)
+      .pipe(
+        map((response: { message: string[], status: string }) => {
+          if (size === null) {
+            return response.message;
+          } else {
+            return response.message.slice(0, size);
+          }
+
+        })
+      );
   }
 
 

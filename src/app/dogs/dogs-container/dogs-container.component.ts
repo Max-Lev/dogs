@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, ChangeDetectionStrategy, OnInit, AfterViewInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { FormGroup, FormBuilder, FormControl, Validators } from '@angular/forms';
-import { Observable, Subject, map, of, takeUntil } from 'rxjs';
+import { Observable, Subject, debounceTime, distinctUntilChanged, map, of, switchMap, takeUntil } from 'rxjs';
 import { DogsService } from '../providers/dogs.service';
 import { SIZE_LIST } from '../models/config';
 import { ActivatedRoute } from '@angular/router';
@@ -52,12 +52,16 @@ export class DogsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
 
 
   getImages$() {
-    this.dogsForm.valueChanges.pipe(takeUntil(this.sub$)).subscribe(val => {
-      const { breed, size } = val;
-      if (breed !== null) {
-        this.images$ = this.dogsService.getDogsImages$(breed, size);
-      }
-    });
+    this.dogsForm.valueChanges.pipe(takeUntil(this.sub$))
+      .pipe(debounceTime(1500))
+      .pipe(distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)))
+      .subscribe(val => {
+        const { breed, size } = val;
+        if (breed !== null) {
+          this.images$ = this.dogsService.getDogsImages$(breed, size);
+          this.changeDetector.detectChanges();
+        }
+      });
   }
 
 }
